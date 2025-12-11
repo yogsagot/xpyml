@@ -92,6 +92,7 @@ grammar = r"""
     %ignore WS
 """
 
+
 class XpymlTransformer(Transformer):
     def start(self, items):
         # Create a virtual root to hold top-level elements
@@ -134,6 +135,54 @@ class XpymlTransformer(Transformer):
     def python_value(self, items):
         # Extract content from the Python Node
         return items[0].value
+
+    def python_variable_value(self, items):
+        # Extract the variable name
+        return items[0].value if isinstance(items[0], Token) else str(items[0])
+
+    def python_fstring_value(self, items):
+        # Extract the f-string
+        return items[0].value if isinstance(items[0], Token) else str(items[0])
+
+    def python_expression_value(self, items):
+        # Extract the expression (reconstruct with parentheses)
+        expr = items[0].value if isinstance(items[0], Token) else str(items[0])
+        return f"({expr})"
+
+    def python_list_value(self, items):
+        # Extract the list (reconstruct with brackets)
+        list_content = items[0].value if isinstance(items[0], Token) else str(items[0])
+        return f"[{list_content}]"
+
+    def python_dict_value(self, items):
+        # Extract the dict (reconstruct with braces)
+        dict_content = items[0].value if isinstance(items[0], Token) else str(items[0])
+        return f"{{{dict_content}}}"
+
+    def python_variable(self, items):
+        # Return the variable as a Node with the variable name
+        var_name = str(items[0])
+        return Node(tag="python_var", value=var_name)
+
+    def python_fstring(self, items):
+        # Return the f-string as a Node
+        fstring = str(items[0])
+        return Node(tag="python_fstring", value=fstring)
+
+    def python_expression(self, items):
+        # Return the expression as a Node
+        expr = str(items[0])
+        return Node(tag="python_expr", value=f"({expr})")
+
+    def python_list(self, items):
+        # Return the list as a Node
+        list_content = str(items[0])
+        return Node(tag="python_list", value=f"[{list_content}]")
+
+    def python_dict(self, items):
+        # Return the dict as a Node
+        dict_content = str(items[0])
+        return Node(tag="python_dict", value=f"{{{dict_content}}}")
 
     def python_block(self, items):
         # items[0] is "{ code }". We strip braces to get clean code.
