@@ -56,10 +56,30 @@ grammar = r"""
 
     attribute: CNAME ("=" value)?
 
-    ?value: STRING           -> string_value
-          | python_block     -> python_value
+    ?value: STRING                    -> string_value
+          | python_block              -> python_value
+          | python_variable           -> python_variable_value
+          | python_fstring            -> python_fstring_value
+          | python_expression         -> python_expression_value
+          | python_list               -> python_list_value
+          | python_dict               -> python_dict_value
 
-    // Matches { code } blocks. 
+    // Python variable (unquoted identifier)
+    python_variable: CNAME
+
+    // Python f-string (f"..." or f'...')
+    python_fstring: /f"[^"]*"/ | /f'[^']*'/
+
+    // Python expression in parentheses
+    python_expression: "(" /[^)]+/ ")"
+
+    // Python list
+    python_list: "[" /[^\]]*/ "]"
+
+    // Python dict
+    python_dict: "{" /[^}]+/ "}"
+
+    // Matches { code } blocks for element content
     // Note: This is a simple regex; it doesn't handle nested braces.
     python_block: "{" /[^}]+/ "}"
 
@@ -71,7 +91,6 @@ grammar = r"""
     %import common.WS
     %ignore WS
 """
-
 
 class XpymlTransformer(Transformer):
     def start(self, items):
